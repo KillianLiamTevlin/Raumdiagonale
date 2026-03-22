@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satz des Pythagoras – Raumdiagonale</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+  }
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.25rem;
+    color: #1d1d1f;
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    text-align: center;
+    color: #6e6e73;
+    margin-bottom: 1.25rem;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 1.25rem;
+    max-width: 680px;
+    margin: 0 auto;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .inputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .input-group label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6e6e73;
+    margin-bottom: 4px;
+  }
+  .input-group input[type=number] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d2d2d7;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    outline: none;
+  }
+  .input-group input[type=number]:focus {
+    border-color: #0071e3;
+    background: #fff;
+  }
+  .slider-group {
+    margin-bottom: 1rem;
+  }
+  .slider-group label {
+    font-size: 0.75rem;
+    color: #6e6e73;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .slider-row input[type=range] {
+    flex: 1;
+    height: 4px;
+    accent-color: #0071e3;
+  }
+  .slider-row span {
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-width: 36px;
+    color: #1d1d1f;
+  }
+  canvas {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+    background: #f0f4f8;
+    touch-action: none;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+  .hint {
+    font-size: 0.72rem;
+    color: #aeaeb2;
+    text-align: center;
+    margin-top: 6px;
+    margin-bottom: 1rem;
+  }
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .metric {
+    background: #f5f5f7;
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .metric .label {
+    font-size: 0.7rem;
+    color: #6e6e73;
+    margin-bottom: 3px;
+  }
+  .metric .value {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    color: #6e6e73;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 3px;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+<h1>Satz des Pythagoras – Raumdiagonale</h1>
+<p class="subtitle">Klasse 9 · Interaktives 3D-Modell</p>
+
+<div class="card">
+  <div class="inputs">
+    <div class="input-group">
+      <label>Länge a (cm)</label>
+      <input type="number" id="inA" min="1" max="15" step="0.5" value="6">
+    </div>
+    <div class="input-group">
+      <label>Breite b (cm)</label>
+      <input type="number" id="inB" min="1" max="15" step="0.5" value="4">
+    </div>
+    <div class="input-group">
+      <label>Höhe h (cm)</label>
+      <input type="number" id="inH" min="1" max="15" step="0.5" value="5">
+    </div>
+  </div>
+
+  <div class="slider-group">
+    <label>Quader aufschneiden</label>
+    <div class="slider-row">
+      <input type="range" id="slCut" min="0" max="1" step="0.01" value="0">
+      <span id="vCut">0%</span>
+    </div>
+  </div>
+
+  <canvas id="c3d"></canvas>
+  <p class="hint">Modell mit dem Finger drehen · Schieberegler zum Aufschneiden</p>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="label">Flächendiagonale d</div>
+      <div class="value" id="fd" style="color:#1D9E75;"></div>
+    </div>
+    <div class="metric">
+      <div class="label">Höhe h</div>
+      <div class="value" id="hv" style="color:#7F77DD;"></div>
+    </div>
+    <div class="metric">
+      <div class="label">Raumdiagonale D</div>
+      <div class="value" id="rd" style="color:#D85A30;"></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#1D9E75;"></div>Flächendiagonale d</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7F77DD;"></div>Höhe h</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#D85A30;"></div>Raumdiagonale D</div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setClearColor(0x000000, 0);
+renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
+camera.position.set(16, 11, 16);
+camera.lookAt(0, 0, 0);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const dl = new THREE.DirectionalLight(0xffffff, 0.55);
+dl.position.set(10, 15, 10);
+scene.add(dl);
+
+const group = new THREE.Group();
+scene.add(group);
+
+let rotY = 0.55, rotX = 0.32, isDragging = false, lastX = 0, lastY = 0;
+
+canvas.addEventListener('mousedown', e => { isDragging = true; lastX = e.clientX; lastY = e.clientY; });
+canvas.addEventListener('touchstart', e => { isDragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; }, { passive: true });
+window.addEventListener('mouseup', () => isDragging = false);
+window.addEventListener('touchend', () => isDragging = false);
+canvas.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  rotY += (e.clientX - lastX) * 0.01; rotX += (e.clientY - lastY) * 0.01;
+  rotX = Math.max(-1.2, Math.min(1.2, rotX));
+  lastX = e.clientX; lastY = e.clientY;
+});
+canvas.addEventListener('touchmove', e => {
+  if (!isDragging) return;
+  rotY += (e.touches[0].clientX - lastX) * 0.01;
+  rotX += (e.touches[0].clientY - lastY) * 0.01;
+  rotX = Math.max(-1.2, Math.min(1.2, rotX));
+  lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+  e.preventDefault();
+}, { passive: false });
+
+let objects = [];
+function clearScene() { objects.forEach(o => group.remove(o)); objects = []; }
+function addObj(o) { group.add(o); objects.push(o); }
+
+function makeLine(p1, p2, color, opacity) {
+  const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...p1), new THREE.Vector3(...p2)]);
+  return new THREE.Line(geo, new THREE.LineBasicMaterial({ color, transparent: (opacity||1)<1, opacity: opacity||1 }));
+}
+function makeQuadMesh(v, color, opacity) {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v.flat()), 3));
+  geo.setIndex([0,1,2,0,2,3]); geo.computeVertexNormals();
+  return new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, transparent:true, opacity, side:THREE.DoubleSide, depthWrite:false }));
+}
+function makeTriMesh(v, color, opacity) {
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v.flat()), 3));
+  geo.setIndex([0,1,2]); geo.computeVertexNormals();
+  return new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, transparent:true, opacity, side:THREE.DoubleSide, depthWrite:false }));
+}
+
+function buildScene(a, b, h, cut) {
+  clearScene();
+  const edgeCol = 0x555555, faceCol = 0xdce8f7, cutCol = 0xfff4e0;
+  const diagCol = 0xD85A30, fdCol = 0x1D9E75, hCol = 0x7F77DD;
+  const hw = a/2, hh = h/2, hd = b/2;
+
+  const VLu = [-hw,-hh, hd], VRu = [ hw,-hh, hd], HRu = [ hw,-hh,-hd], HLu = [-hw,-hh,-hd];
+  const VLo = [-hw, hh, hd], VRo = [ hw, hh, hd], HRo = [ hw, hh,-hd], HLo = [-hw, hh,-hd];
+
+  const diagLen = Math.sqrt(a*a + b*b);
+  const nx = b/diagLen, nz = a/diagLen;
+  const offset = cut * (a+b) * 0.8;
+  const ox = nx*offset, oz = nz*offset;
+  function mv(p) { return [p[0]+ox, p[1], p[2]+oz]; }
+
+  const VLu_b=mv(VLu), HRu_b=mv(HRu), VLo_b=mv(VLo), HRo_b=mv(HRo);
+  const VRu_b=mv(VRu), VRo_b=mv(VRo);
+
+  if (cut < 0.005) {
+    [[VLu,VRu],[VRu,HRu],[HRu,HLu],[HLu,VLu],[VLo,VRo],[VRo,HRo],[HRo,HLo],[HLo,VLo],
+     [VLu,VLo],[VRu,VRo],[HRu,HRo],[HLu,HLo]].forEach(([p,q]) => addObj(makeLine(p,q,edgeCol)));
+    addObj(makeQuadMesh([VLu,VRu,HRu,HLu],faceCol,0.18));
+    addObj(makeQuadMesh([VLo,VRo,HRo,HLo],faceCol,0.18));
+    addObj(makeQuadMesh([VLu,VRu,VRo,VLo],faceCol,0.18));
+    addObj(makeQuadMesh([HRu,HLu,HLo,HRo],faceCol,0.18));
+    addObj(makeQuadMesh([VLu,HLu,HLo,VLo],faceCol,0.18));
+    addObj(makeQuadMesh([VRu,HRu,HRo,VRo],faceCol,0.18));
+    addObj(makeLine(VLu,HRo,diagCol));
+  } else {
+    [[VLu,HLu],[HLu,HRu],[VLo,HLo],[HLo,HRo],[VLu,VLo],[HLu,HLo],[HRu,HRo]]
+      .forEach(([p,q]) => addObj(makeLine(p,q,edgeCol)));
+    addObj(makeQuadMesh([VLu,HLu,HLo,VLo],faceCol,0.22));
+    addObj(makeQuadMesh([HLu,HRu,HRo,HLo],faceCol,0.22));
+    addObj(makeTriMesh([VLu,HLu,HRu],faceCol,0.22));
+    addObj(makeTriMesh([VLo,HLo,HRo],faceCol,0.22));
+
+    addObj(makeQuadMesh([VLu,HRu,HRo,VLo],cutCol,0.65));
+    addObj(makeLine(VLu,HRu,fdCol));
+    addObj(makeLine(VLu,VLo,hCol));
+    addObj(makeLine(HRu,HRo,hCol));
+    addObj(makeLine(VLo,HRo,edgeCol));
+    addObj(makeLine(VLu,HRo,diagCol));
+
+    if (cut > 0.65) addObj(makeTriMesh([VLu,HRu,HRo],0xD85A30,0.28));
+
+    [[VLu_b,VRu_b],[VRu_b,HRu_b],[HRu_b,VLu_b],[VLo_b,VRo_b],[VRo_b,HRo_b],[HRo_b,VLo_b],
+     [VLu_b,VLo_b],[VRu_b,VRo_b],[HRu_b,HRo_b]].forEach(([p,q]) => addObj(makeLine(p,q,edgeCol)));
+    addObj(makeQuadMesh([VLu_b,VRu_b,VRo_b,VLo_b],faceCol,0.22));
+    addObj(makeQuadMesh([VRu_b,HRu_b,HRo_b,VRo_b],faceCol,0.22));
+    addObj(makeTriMesh([VLu_b,VRu_b,HRu_b],faceCol,0.22));
+    addObj(makeTriMesh([VLo_b,VRo_b,HRo_b],faceCol,0.22));
+  }
+}
+
+function resize() {
+  const w = canvas.offsetWidth || 600;
+  const h = Math.min(w * 0.65, 420);
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  canvas.style.height = h + 'px';
+}
+
+function getVals() {
+  return {
+    a: Math.max(1, parseFloat(document.getElementById('inA').value) || 6),
+    b: Math.max(1, parseFloat(document.getElementById('inB').value) || 4),
+    h: Math.max(1, parseFloat(document.getElementById('inH').value) || 5),
+    cut: parseFloat(document.getElementById('slCut').value)
+  };
+}
+
+function update() {
+  const { a, b, h, cut } = getVals();
+  document.getElementById('vCut').textContent = Math.round(cut*100) + '%';
+  document.getElementById('fd').textContent = Math.sqrt(a*a+b*b).toFixed(2) + ' cm';
+  document.getElementById('hv').textContent = h.toFixed(2) + ' cm';
+  document.getElementById('rd').textContent = Math.sqrt(a*a+b*b+h*h).toFixed(2) + ' cm';
+  buildScene(a, b, h, cut);
+}
+
+['inA','inB','inH'].forEach(id => document.getElementById(id).addEventListener('change', update));
+document.getElementById('slCut').addEventListener('input', update);
+
+resize(); update();
+window.addEventListener('resize', () => { resize(); update(); });
+
+(function animate() {
+  requestAnimationFrame(animate);
+  group.rotation.y = rotY;
+  group.rotation.x = rotX;
+  renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>
